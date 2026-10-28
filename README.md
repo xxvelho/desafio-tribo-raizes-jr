@@ -32,7 +32,7 @@ Para entrar no console do H2: JDBC URL `jdbc:h2:mem:produtosdb`, usuário `sa` e
 ### Testes
 
 ```bash
-./mvnw test      # executa os 29 testes
+./mvnw test      # executa todos os testes
 ./mvnw verify    # testes + relatório de cobertura em target/site/jacoco/index.html
 ```
 
@@ -53,7 +53,9 @@ Validações do corpo (POST e PUT):
 | `nome` | obrigatório, até 150 caracteres |
 | `descricao` | opcional, até 500 caracteres |
 | `preco` | obrigatório, maior que zero, até 10 dígitos inteiros e 2 casas decimais |
-| `quantidadeEstoque` | obrigatório, zero ou maior |
+| `quantidadeEstoque` | obrigatório, inteiro, zero ou maior |
+
+Todos os erros (400, 404, 405, 415, 500...) devolvem o mesmo JSON: `timestamp` (UTC), `status`, `mensagem` e, nas falhas de validação, `erros` (um item por campo inválido, ordenado por campo).
 
 ## Exemplos com curl
 
@@ -123,7 +125,7 @@ curl -i http://localhost:8080/produtos/99
 ```
 HTTP/1.1 404
 
-{"timestamp":"2026-10-28T17:25:20.142379466","status":404,"mensagem":"Produto não encontrado com id 99","erros":[]}
+{"timestamp":"2026-10-28T20:50:50.798573122Z","status":404,"mensagem":"Produto não encontrado com id 99"}
 ```
 
 Dados inválidos (400):
@@ -137,7 +139,7 @@ curl -i -X POST http://localhost:8080/produtos \
 ```
 HTTP/1.1 400
 
-{"timestamp":"2026-10-28T17:25:20.186196586","status":400,"mensagem":"Dados inválidos","erros":[{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"preco","mensagem":"O preço deve ser maior que zero"},{"campo":"quantidadeEstoque","mensagem":"A quantidade em estoque não pode ser negativa"}]}
+{"timestamp":"2026-10-28T20:50:50.838754976Z","status":400,"mensagem":"Dados inválidos","erros":[{"campo":"nome","mensagem":"O nome é obrigatório"},{"campo":"preco","mensagem":"O preço deve ser maior que zero"},{"campo":"quantidadeEstoque","mensagem":"A quantidade em estoque não pode ser negativa"}]}
 ```
 
 ## Estrutura e padrões de projeto
@@ -157,7 +159,7 @@ com.exemplo.produtos
 - **DAO:** `ProdutoDAO` define as operações de persistência (`salvar`, `atualizar`, `remover`, `buscarPorId`, `listarTodos`). Todo o SQL fica isolado em `ProdutoDAOJdbc`, que usa `JdbcTemplate`.
 - **Factory:** `DAOFactory.criarProdutoDAO()` é quem instancia o DAO. O `ProdutoServiceImpl` depende da factory e da interface `ProdutoDAO`, nunca da implementação concreta. Trocar a forma de persistência exige mexer apenas na factory.
 - **DTO:** o controller recebe `ProdutoRequestDTO` (com as validações) e devolve `ProdutoResponseDTO`. A entidade `Produto` não é exposta pela API. O `ProdutoMapper` faz a conversão.
-- **Tratamento de erros:** o `GlobalExceptionHandler` (`@RestControllerAdvice`) devolve um JSON padronizado (`ErroResponseDTO`) para 404 (produto inexistente) e 400 (validação ou JSON inválido).
+- **Tratamento de erros:** o `GlobalExceptionHandler` (`@RestControllerAdvice`) devolve um JSON padronizado (`ErroResponseDTO`) para 404 (produto inexistente), 400 (validação, JSON ou id inválido) e para os demais erros do Spring MVC (405, 415...). Erros inesperados viram 500 sem expor detalhes ao cliente, e o detalhe vai para o log. A classe estende `ResponseEntityExceptionHandler`.
 
 O schema da tabela está em `src/main/resources/schema.sql` e é executado na inicialização.
 
@@ -165,11 +167,13 @@ O schema da tabela está em `src/main/resources/schema.sql` e é executado na in
 
 | Classe | Tipo | O que cobre |
 |--------|------|-------------|
-| `ProdutoServiceImplTest` | unitário (Mockito) | criar, atualizar, remover, buscar por ID e listar, incluindo os erros de ID inexistente |
+| `ProdutoRequestDTOTest` | unitário (Bean Validation) | cada regra de validação do DTO, incluindo os limites (150/151 caracteres, 2 casas decimais...) |
+| `ProdutoServiceImplTest` | unitário (Mockito) | criar, atualizar, remover, buscar por ID e listar, incluindo os erros de ID inexistente e a escala do preço |
 | `ProdutoDAOJdbcTest` | `@JdbcTest` com H2 real | SQL de cada operação do DAO |
-| `ProdutoControllerTest` | `@WebMvcTest` + MockMvc | status HTTP, header `Location`, validações (400) e 404 |
+| `DAOFactoryTest` | unitário | a factory devolve um `ProdutoDAOJdbc` |
+| `ProdutoControllerTest` | `@WebMvcTest` + MockMvc | status HTTP, header `Location`, validações (400), 404, 405, 415 e 500 no JSON padrão |
 | `ProdutosApiApplicationTests` | `@SpringBootTest` | a aplicação sobe com o contexto completo |
 
-A cobertura de linhas medida pelo JaCoCo é de 98% (131 de 133 linhas; as não cobertas são o `main`).
+O JaCoCo mede cerca de 97% de cobertura de linhas. As linhas sem teste são o `main` da aplicação e algumas mensagens do `GlobalExceptionHandler` para status que a API não gera hoje.
 
 No JDK 21, o Mockito imprime o aviso `A Java agent has been loaded dynamically`. É apenas um aviso e não afeta os testes.
