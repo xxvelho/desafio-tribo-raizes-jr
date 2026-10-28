@@ -63,6 +63,16 @@ class ProdutoServiceImplTest {
     }
 
     @Test
+    void deveNormalizarPrecoParaDuasCasasDecimaisAoCriar() {
+        when(produtoDAO.salvar(any(Produto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        ProdutoRequestDTO request = new ProdutoRequestDTO("Cabo", null, new BigDecimal("10"), 1);
+
+        ProdutoResponseDTO response = service.criar(request);
+
+        assertThat(response.preco()).hasToString("10.00");
+    }
+
+    @Test
     void deveAtualizarProdutoExistente() {
         when(produtoDAO.atualizar(any(Produto.class))).thenReturn(true);
 
@@ -74,6 +84,16 @@ class ProdutoServiceImplTest {
         ArgumentCaptor<Produto> captor = ArgumentCaptor.forClass(Produto.class);
         verify(produtoDAO).atualizar(captor.capture());
         assertThat(captor.getValue().getId()).isEqualTo(5L);
+    }
+
+    @Test
+    void deveNormalizarPrecoParaDuasCasasDecimaisAoAtualizar() {
+        when(produtoDAO.atualizar(any(Produto.class))).thenReturn(true);
+        ProdutoRequestDTO request = new ProdutoRequestDTO("Cabo", null, new BigDecimal("10"), 1);
+
+        ProdutoResponseDTO response = service.atualizar(1L, request);
+
+        assertThat(response.preco()).hasToString("10.00");
     }
 
     @Test

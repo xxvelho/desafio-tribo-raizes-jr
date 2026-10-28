@@ -12,7 +12,8 @@ public class ProdutoMapper {
         Produto produto = new Produto();
         produto.setNome(dto.nome());
         produto.setDescricao(dto.descricao());
-        produto.setPreco(dto.preco());
+        // a coluna tem 2 casas decimais; assim POST e PUT respondem no mesmo formato do GET
+        produto.setPreco(dto.preco().setScale(2));
         produto.setQuantidadeEstoque(dto.quantidadeEstoque());
         return produto;
     }
