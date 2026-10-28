@@ -52,10 +52,10 @@ Validações do corpo (POST e PUT):
 |-------|-------|
 | `nome` | obrigatório, até 150 caracteres |
 | `descricao` | opcional, até 500 caracteres |
-| `preco` | obrigatório, maior que zero, até 10 dígitos inteiros e 2 casas decimais |
-| `quantidadeEstoque` | obrigatório, inteiro, zero ou maior |
+| `preco` | obrigatório, maior que zero, no máximo `9999999999.99` e até 2 casas decimais (zeros à direita contam: `10.500` é recusado) |
+| `quantidadeEstoque` | obrigatório, número inteiro (`10`, não `"10"` nem `10.5`), zero ou maior |
 
-Todos os erros (400, 404, 405, 415, 500...) devolvem o mesmo JSON: `timestamp` (UTC), `status`, `mensagem` e, nas falhas de validação, `erros` (um item por campo inválido, ordenado por campo).
+Todos os erros (400, 404, 405, 406, 415, 500...) devolvem o mesmo JSON, com `Content-Type: application/json`: `timestamp` (UTC), `status`, `mensagem` e, nas falhas de validação, `erros`. Cada item de `erros` é uma regra violada, ordenada por campo, então o mesmo campo pode aparecer mais de uma vez.
 
 ## Exemplos com curl
 
@@ -159,7 +159,7 @@ com.exemplo.produtos
 - **DAO:** `ProdutoDAO` define as operações de persistência (`salvar`, `atualizar`, `remover`, `buscarPorId`, `listarTodos`). Todo o SQL fica isolado em `ProdutoDAOJdbc`, que usa `JdbcTemplate`.
 - **Factory:** `DAOFactory.criarProdutoDAO()` é quem instancia o DAO. O `ProdutoServiceImpl` depende da factory e da interface `ProdutoDAO`, nunca da implementação concreta. Trocar a forma de persistência exige mexer apenas na factory.
 - **DTO:** o controller recebe `ProdutoRequestDTO` (com as validações) e devolve `ProdutoResponseDTO`. A entidade `Produto` não é exposta pela API. O `ProdutoMapper` faz a conversão.
-- **Tratamento de erros:** o `GlobalExceptionHandler` (`@RestControllerAdvice`) devolve um JSON padronizado (`ErroResponseDTO`) para 404 (produto inexistente), 400 (validação, JSON ou id inválido) e para os demais erros do Spring MVC (405, 415...). Erros inesperados viram 500 sem expor detalhes ao cliente, e o detalhe vai para o log. A classe estende `ResponseEntityExceptionHandler`.
+- **Tratamento de erros:** o `GlobalExceptionHandler` (`@RestControllerAdvice`) devolve um JSON padronizado (`ErroResponseDTO`) para 404 (produto inexistente), 400 (validação, JSON ou id inválido) e para os demais erros do Spring MVC (405, 406, 415...). Erros inesperados viram 500 sem expor detalhes ao cliente, e o detalhe vai para o log. A classe estende `ResponseEntityExceptionHandler`.
 
 O schema da tabela está em `src/main/resources/schema.sql` e é executado na inicialização.
 
