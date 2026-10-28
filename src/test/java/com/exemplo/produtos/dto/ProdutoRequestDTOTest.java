@@ -98,6 +98,11 @@ class ProdutoRequestDTOTest {
     }
 
     @Test
+    void deveRejeitarPrecoComExpoenteGigante() {
+        assertThat(camposInvalidos(comPreco(new BigDecimal("1e2147483647")))).containsExactly("preco");
+    }
+
+    @Test
     void deveRejeitarEstoqueNulo() {
         assertThat(camposInvalidos(comEstoque(null))).containsExactly("quantidadeEstoque");
     }

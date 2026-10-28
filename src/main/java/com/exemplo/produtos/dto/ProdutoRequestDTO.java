@@ -1,5 +1,6 @@
 package com.exemplo.produtos.dto;
 
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +21,7 @@ public record ProdutoRequestDTO(
 
         @NotNull(message = "O preço é obrigatório")
         @Positive(message = "O preço deve ser maior que zero")
+        @DecimalMax(value = "9999999999.99", message = "O preço deve ser no máximo 9999999999.99")
         @Digits(integer = 10, fraction = 2, message = "O preço deve ter no máximo 10 dígitos inteiros e 2 casas decimais")
         BigDecimal preco,
 

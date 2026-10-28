@@ -79,6 +79,19 @@ class ProdutoControllerTest {
     }
 
     @Test
+    void deveRetornar400QuandoPrecoTemExpoenteGigante() throws Exception {
+        mockMvc.perform(post("/produtos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome": "Teclado", "preco": 1e2147483647, "quantidadeEstoque": 10}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erros[*].campo", contains("preco")));
+
+        verifyNoInteractions(produtoService);
+    }
+
+    @Test
     void deveOrdenarErrosDeValidacaoPorCampo() throws Exception {
         mockMvc.perform(post("/produtos")
                         .contentType(MediaType.APPLICATION_JSON)
