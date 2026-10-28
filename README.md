@@ -170,10 +170,10 @@ O schema da tabela está em `src/main/resources/schema.sql` e é executado na in
 | `ProdutoRequestDTOTest` | unitário (Bean Validation) | cada regra de validação do DTO, incluindo os limites (150/151 caracteres, 2 casas decimais...) |
 | `ProdutoServiceImplTest` | unitário (Mockito) | criar, atualizar, remover, buscar por ID e listar, incluindo os erros de ID inexistente e a escala do preço |
 | `ProdutoDAOJdbcTest` | `@JdbcTest` com H2 real | SQL de cada operação do DAO |
-| `DAOFactoryTest` | unitário | a factory devolve um `ProdutoDAOJdbc` |
-| `ProdutoControllerTest` | `@WebMvcTest` + MockMvc | status HTTP, header `Location`, validações (400), 404, 405, 415 e 500 no JSON padrão |
+| `DAOFactoryTest` | `@JdbcTest` com H2 real | a factory devolve um `ProdutoDAOJdbc` que funciona com o `JdbcTemplate` recebido |
+| `ProdutoControllerTest` | `@WebMvcTest` + MockMvc | status HTTP, header `Location`, validações (400), 404, 405, 406, 415 e 500 no JSON padrão, inclusive quando o `Accept` não é JSON |
 | `ProdutosApiApplicationTests` | `@SpringBootTest` | a aplicação sobe com o contexto completo |
 
-O JaCoCo mede cerca de 97% de cobertura de linhas. As linhas sem teste são o `main` da aplicação e algumas mensagens do `GlobalExceptionHandler` para status que a API não gera hoje.
+O JaCoCo mede cerca de 97% de cobertura de linhas. As linhas sem teste são o `main` da aplicação e duas mensagens do `GlobalExceptionHandler` (400 genérico e status não previstos) que a API não gera hoje.
 
 No JDK 21, o Mockito imprime o aviso `A Java agent has been loaded dynamically`. É apenas um aviso e não afeta os testes.
