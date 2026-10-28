@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.Comparator;
 import java.util.List;
 
 @RestControllerAdvice
@@ -42,6 +43,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<CampoErro> erros = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> new CampoErro(fieldError.getField(), fieldError.getDefaultMessage()))
+                .sorted(Comparator.comparing(CampoErro::campo).thenComparing(CampoErro::mensagem))
                 .toList();
         ErroResponseDTO erro = new ErroResponseDTO(status.value(), "Dados inválidos", erros);
         return ResponseEntity.status(status).body(erro);

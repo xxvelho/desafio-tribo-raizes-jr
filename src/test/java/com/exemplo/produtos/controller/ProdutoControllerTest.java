@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
@@ -75,6 +76,17 @@ class ProdutoControllerTest {
                 .andExpect(jsonPath("$.erros[*].campo", containsInAnyOrder("nome", "preco")));
 
         verifyNoInteractions(produtoService);
+    }
+
+    @Test
+    void deveOrdenarErrosDeValidacaoPorCampo() throws Exception {
+        mockMvc.perform(post("/produtos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome": "", "preco": -10, "quantidadeEstoque": -1}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erros[*].campo", contains("nome", "preco", "quantidadeEstoque")));
     }
 
     @Test
