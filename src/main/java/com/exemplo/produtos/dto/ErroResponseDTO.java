@@ -1,13 +1,15 @@
 package com.exemplo.produtos.dto;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.time.Instant;
 import java.util.List;
 
 public record ErroResponseDTO(
-        LocalDateTime timestamp,
+        Instant timestamp,
         int status,
         String mensagem,
-        List<CampoErro> erros
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) List<CampoErro> erros
 ) {
 
     public ErroResponseDTO(int status, String mensagem) {
@@ -15,7 +17,7 @@ public record ErroResponseDTO(
     }
 
     public ErroResponseDTO(int status, String mensagem, List<CampoErro> erros) {
-        this(LocalDateTime.now(), status, mensagem, erros);
+        this(Instant.now(), status, mensagem, erros);
     }
 
     public record CampoErro(String campo, String mensagem) {

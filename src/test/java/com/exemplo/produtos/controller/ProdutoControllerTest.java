@@ -124,6 +124,8 @@ class ProdutoControllerTest {
         mockMvc.perform(get("/produtos/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.timestamp", endsWith("Z")))
+                .andExpect(jsonPath("$.erros").doesNotExist())
                 .andExpect(jsonPath("$.mensagem").value("Produto não encontrado com id 99"));
     }
 
