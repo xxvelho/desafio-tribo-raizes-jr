@@ -80,6 +80,13 @@ class ProdutoDAOJdbcTest {
     }
 
     @Test
+    void deveAtualizarProdutoMesmoComDadosIguais() {
+        Produto salvo = dao.salvar(novoProduto("Teclado", "Teclado mecânico", "199.90", 10));
+
+        assertThat(dao.atualizar(salvo)).isTrue();
+    }
+
+    @Test
     void naoDeveAtualizarProdutoInexistente() {
         Produto produto = novoProduto("Fantasma", null, "10.00", 1);
         produto.setId(999L);
