@@ -15,15 +15,19 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -95,6 +99,55 @@ class ProdutoControllerTest {
                 .andExpect(jsonPath("$.mensagem").value("Corpo da requisição inválido ou malformado"));
 
         verifyNoInteractions(produtoService);
+    }
+
+    @Test
+    void deveRetornar400QuandoIdNaUrlForInvalido() throws Exception {
+        mockMvc.perform(get("/produtos/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.mensagem").value("O valor informado na URL tem formato inválido"));
+
+        verifyNoInteractions(produtoService);
+    }
+
+    @Test
+    void deveRetornar415QuandoContentTypeNaoForJson() throws Exception {
+        mockMvc.perform(post("/produtos")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("teste"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.status").value(415))
+                .andExpect(jsonPath("$.mensagem").value("Tipo de conteúdo não suportado"));
+    }
+
+    @Test
+    void deveRetornar405QuandoMetodoNaoForSuportado() throws Exception {
+        mockMvc.perform(patch("/produtos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().exists("Allow"))
+                .andExpect(jsonPath("$.status").value(405));
+    }
+
+    @Test
+    void deveRetornar404QuandoARotaNaoExistir() throws Exception {
+        mockMvc.perform(get("/rota-inexistente"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.mensagem").value("Recurso não encontrado"));
+    }
+
+    @Test
+    void deveRetornar500SemExporDetalhesDoErro() throws Exception {
+        when(produtoService.listarTodos()).thenThrow(new IllegalStateException("falha interna secreta"));
+
+        mockMvc.perform(get("/produtos"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.mensagem").value("Erro interno do servidor"))
+                .andExpect(content().string(not(containsString("secreta"))));
     }
 
     @Test
