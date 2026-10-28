@@ -44,7 +44,7 @@ public class ProdutoController {
             content = @Content(schema = @Schema(implementation = ErroResponseDTO.class)))
     public ResponseEntity<ProdutoResponseDTO> criar(@Valid @RequestBody ProdutoRequestDTO request) {
         ProdutoResponseDTO criado = produtoService.criar(request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+        URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
                 .buildAndExpand(criado.id())
                 .toUri();

@@ -66,6 +66,17 @@ class ProdutoControllerTest {
     }
 
     @Test
+    void deveMontarLocationSemQueryString() throws Exception {
+        when(produtoService.criar(any(ProdutoRequestDTO.class))).thenReturn(teclado());
+
+        mockMvc.perform(post("/produtos?origem=teste")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSON_VALIDO))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", endsWith("/produtos/1")));
+    }
+
+    @Test
     void deveRetornar400AoCriarProdutoInvalido() throws Exception {
         mockMvc.perform(post("/produtos")
                         .contentType(MediaType.APPLICATION_JSON)
