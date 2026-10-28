@@ -1,26 +1,29 @@
 package com.exemplo.produtos.dao;
 
+import com.exemplo.produtos.model.Produto;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
+@JdbcTest
 class DAOFactoryTest {
 
-    @Mock
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    void deveCriarProdutoDAOJdbc() {
-        DAOFactory factory = new DAOFactory(jdbcTemplate);
+    void deveCriarProdutoDAOJdbcQueUsaOJdbcTemplateRecebido() {
+        ProdutoDAO dao = new DAOFactory(jdbcTemplate).criarProdutoDAO();
 
-        ProdutoDAO dao = factory.criarProdutoDAO();
+        Produto salvo = dao.salvar(new Produto(null, "Teclado", null, new BigDecimal("199.90"), 10));
 
         assertThat(dao).isInstanceOf(ProdutoDAOJdbc.class);
+        assertThat(dao.buscarPorId(salvo.getId())).isPresent();
     }
 
 }
