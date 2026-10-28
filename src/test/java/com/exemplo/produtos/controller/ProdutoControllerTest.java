@@ -96,6 +96,19 @@ class ProdutoControllerTest {
     }
 
     @Test
+    void deveRetornar400QuandoEstoqueForTexto() throws Exception {
+        mockMvc.perform(post("/produtos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome": "Teclado", "preco": 199.90, "quantidadeEstoque": "10"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value("Corpo da requisição inválido ou malformado"));
+
+        verifyNoInteractions(produtoService);
+    }
+
+    @Test
     void deveRetornar400QuandoPrecoTemExpoenteGigante() throws Exception {
         mockMvc.perform(post("/produtos")
                         .contentType(MediaType.APPLICATION_JSON)
