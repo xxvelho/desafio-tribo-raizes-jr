@@ -152,6 +152,25 @@ class ProdutoControllerTest {
     }
 
     @Test
+    void deveRetornar404EmJsonMesmoQuandoOClienteNaoAceitaJson() throws Exception {
+        when(produtoService.buscarPorId(99L)).thenThrow(new ProdutoNaoEncontradoException(99L));
+
+        mockMvc.perform(get("/produtos/99").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.mensagem").value("Produto não encontrado com id 99"));
+    }
+
+    @Test
+    void deveRetornar406EmJsonQuandoOClienteSoAceitaOutroFormato() throws Exception {
+        mockMvc.perform(get("/produtos").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(406))
+                .andExpect(jsonPath("$.mensagem").value("Formato de resposta não suportado"));
+    }
+
+    @Test
     void deveRetornar500SemExporDetalhesDoErro() throws Exception {
         when(produtoService.listarTodos()).thenThrow(new IllegalStateException("falha interna secreta"));
 
