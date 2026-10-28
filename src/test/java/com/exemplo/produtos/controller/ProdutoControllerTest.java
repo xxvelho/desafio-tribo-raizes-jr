@@ -5,15 +5,20 @@ import com.exemplo.produtos.dto.ProdutoResponseDTO;
 import com.exemplo.produtos.exception.ProdutoNaoEncontradoException;
 import com.exemplo.produtos.service.ProdutoService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -33,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(OutputCaptureExtension.class)
 @WebMvcTest(ProdutoController.class)
 class ProdutoControllerTest {
 
@@ -192,6 +198,17 @@ class ProdutoControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(406))
                 .andExpect(jsonPath("$.mensagem").value("Formato de resposta não suportado"));
+    }
+
+    @Test
+    void deveRegistrarNoLogOsErros5xxDoSpringMvc(CapturedOutput output) throws Exception {
+        when(produtoService.listarTodos()).thenThrow(new HttpMessageNotWritableException("falha ao escrever"));
+
+        mockMvc.perform(get("/produtos"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.mensagem").value("Erro interno do servidor"));
+
+        assertThat(output.getAll()).contains("falha ao escrever");
     }
 
     @Test

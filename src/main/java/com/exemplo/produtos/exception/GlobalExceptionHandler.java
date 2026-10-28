@@ -62,6 +62,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        if (status.is5xxServerError()) {
+            log.error("Erro do servidor ao processar a requisição", ex);
+        }
         return resposta(status, mensagemPara(status), List.of(), headers);
     }
 
