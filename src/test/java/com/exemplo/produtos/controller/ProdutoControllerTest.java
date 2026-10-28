@@ -85,6 +85,19 @@ class ProdutoControllerTest {
     }
 
     @Test
+    void deveRetornar400QuandoEstoqueForDecimal() throws Exception {
+        mockMvc.perform(post("/produtos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome": "Teclado", "preco": 199.90, "quantidadeEstoque": 10.7}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value("Corpo da requisição inválido ou malformado"));
+
+        verifyNoInteractions(produtoService);
+    }
+
+    @Test
     void deveListarProdutos() throws Exception {
         when(produtoService.listarTodos()).thenReturn(List.of(teclado()));
 
